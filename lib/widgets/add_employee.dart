@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project_app/Model/employee.dart';
+import 'package:flutter_project_app/provider/employee_data_provider.dart';
 import 'package:flutter_project_app/screens/employee_view.screen.dart';
 
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class AddEmployeeScreen extends StatefulWidget {
   static const routName = 'add-employee';
@@ -16,7 +19,7 @@ class AddEmployeeScreen extends StatefulWidget {
 }
 
 class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
-  final _globalKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
 
   String name;
   String department;
@@ -151,24 +154,30 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           margin: EdgeInsets.all(16),
           // padding: EdgeInsets.all(12),
           child: Form(
-            key: _globalKey,
+            key: _formKey,
             child: Column(
               children: [
                 TextFormField(
                   controller: _nameEditingController,
                   validator: (value) {
-                    if (value.isEmpty || value.contains('1234567890')) {
+                    if (value.isEmpty || value.length > 30) {
                       return 'Please enter a correct username';
                     } else {
                       return null;
                     }
                   },
                   decoration: InputDecoration(
-                    // border: OutlineInputBorder(),
                     hintText: 'Employee Name',
                   ),
                 ),
                 TextFormField(
+                  validator: (value) {
+                    if (value.isEmpty || value.length < 10) {
+                      return 'Please enter a valid phone number';
+                    } else {
+                      return null;
+                    }
+                  },
                   controller: _contactEditingController,
                   keyboardType: TextInputType.number,
                   maxLength: 10,
@@ -176,20 +185,30 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                 ),
                 buildDateField(),
                 buildDropDownButton(),
-                RaisedButton(
+                ElevatedButton(
                   onPressed: () {
-                    name = _nameEditingController.text;
-                    department = _selectedDept;
-                    contactNo = _contactEditingController.text;
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => EmployeeView(
-                          name: name,
-                          department: department,
-                          contactNumber: contactNo,
+                    if (_formKey.currentState.validate()) {
+                      Employee employee;
+
+                      employee = Employee(
+                        name: _nameEditingController.text,
+                        department: _selectedDept,
+                        contactNo: _contactEditingController.text,
+                        // designation:
+                      );
+                      Provider.of<EmployeeDataProvider>(context, listen: false)
+                          .addEmployee(employee);
+
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => EmployeeView(
+                              // name: name,
+                              // department: department,
+                              // contactNumber: contactNo,
+                              ),
                         ),
-                      ),
-                    );
+                      );
+                    }
                   },
                   child: Text('Submit Application'),
                 )

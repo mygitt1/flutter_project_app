@@ -1,7 +1,7 @@
 class Employee {
   final String name;
-  final List<String> department;
-  final List<String> designation;
+  final String department;
+  final String designation;
   final String contactNo;
 
   Employee({

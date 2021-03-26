@@ -34,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _password = _passEditingController.text;
       print(_userEmail);
       print(_password);
-      Navigator.of(context).pushNamed(EmployeeView.routeName);
+      Navigator.of(context).pushReplacementNamed(EmployeeView.routeName);
     }
     // if (isValid) {
     //   print(isValid);
@@ -63,13 +63,8 @@ class _LoginScreenState extends State<LoginScreen> {
               TextFormField(
                 controller: _emailEditingController,
                 validator: (value) {
-                  print('email validation');
-                  print(value);
-                  print(value.isEmpty);
-                  print(value.contains('@'));
-                  print(value.contains('.'));
-                  var changedValue = value.trim();
-                  if (changedValue.isEmpty || changedValue.contains('@')) {
+                  if (value.isEmpty ||
+                      value.contains('@') && value.contains('.')) {
                     print('working');
                     return 'Please enter a valid email address';
                   } else {
@@ -101,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 height: 8,
               ),
-              RaisedButton(
+              ElevatedButton(
                 onPressed: _submit,
                 child: Text('Login'),
               )
