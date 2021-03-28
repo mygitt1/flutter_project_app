@@ -27,7 +27,9 @@ class MyApp extends StatelessWidget {
         ),
         home: LoginScreen(),
         routes: {
-          EmployeeView.routeName: (ctx) => EmployeeView(),
+          EmployeeView.routeName: (ctx) => EmployeeView(
+            
+          ),
           AddEmployeeScreen.routName: (ctx) => AddEmployeeScreen(),
         },
       ),

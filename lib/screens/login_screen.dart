@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_project_app/screens/employee_view.screen.dart';
+import 'package:form_field_validator/form_field_validator.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -15,38 +17,16 @@ class _LoginScreenState extends State<LoginScreen> {
   String _userEmail = '';
   String _password = '';
 
-  void _submit() {
-    FocusScope.of(context).unfocus();
-
-    bool isValid = false;
-    // print(isValid);
-    if (_formKey.currentState != null) {
-      isValid = _formKey.currentState.validate();
-      _formKey.currentState.save();
-    }
-    if (!isValid) {
-      print('wnkdd');
-      return;
+  String passValidator(value) {
+    if (value.isEmpty) {
+      return 'Required*';
+    } else if (value.length < 6) {
+      return 'Should be atleast 6 Characters';
+    } else if (value.length > 15) {
+      return 'Should be atmost 15 characters';
     } else {
-      print(isValid);
-      // _formKey.currentState.save();
-      _userEmail = _emailEditingController.text;
-      _password = _passEditingController.text;
-      print(_userEmail);
-      print(_password);
-      Navigator.of(context).pushReplacementNamed(EmployeeView.routeName);
+      return null;
     }
-    // if (isValid) {
-    //   print(isValid);
-    //   _formKey.currentState.save();
-    //   _userEmail = _emailEditingController.text;
-    //   _password = _passEditingController.text;
-    //   print(_userEmail);
-    //   print(_password);
-    //   Navigator.of(context).pushNamed(EmployeeView.routeName);
-    // } else {
-    //   return null;
-    // }
   }
 
   @override
@@ -61,37 +41,30 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               TextFormField(
+                autovalidateMode: AutovalidateMode.always,
                 controller: _emailEditingController,
-                validator: (value) {
-                  if (value.isEmpty ||
-                      value.contains('@') && value.contains('.')) {
-                    print('working');
-                    return 'Please enter a valid email address';
-                  } else {
-                    print('not working');
-                    return null;
-                  }
-                },
+                validator: MultiValidator([
+                  RequiredValidator(errorText: 'Required*'),
+                  EmailValidator(errorText: 'Not a valid Email')
+                ]),
                 keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(labelText: 'Email address'),
-                // onSaved: (value) {
-                //   _userEmail = value;
-                // },
+                decoration: InputDecoration(
+                  labelText: 'Email address',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(
+                height: 12,
               ),
               TextFormField(
+                autovalidateMode: AutovalidateMode.always,
                 controller: _passEditingController,
-                validator: (value) {
-                  if (value.isEmpty || value.length < 7) {
-                    return 'Please enter a good password';
-                  } else {
-                    return null;
-                  }
-                },
-                decoration: InputDecoration(labelText: 'Password'),
+                validator: passValidator,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                ),
                 obscureText: true,
-                // onSaved: (value) {
-                //   _password = value;
-                // },
               ),
               SizedBox(
                 height: 8,
@@ -105,5 +78,25 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  void _submit() async {
+    FocusScope.of(context).unfocus();
+
+    bool isValid = false;
+    // print(isValid);
+    if (_formKey.currentState != null) {
+      isValid = _formKey.currentState.validate();
+      _formKey.currentState.save();
+    }
+    if (!isValid) {
+      return;
+    } else {
+      // _formKey.currentState.save();
+      _userEmail = _emailEditingController.text;
+      _password = _passEditingController.text;
+
+      Navigator.of(context).pushReplacementNamed(EmployeeView.routeName);
+    }
   }
 }

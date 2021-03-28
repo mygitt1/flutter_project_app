@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_project_app/Model/employee.dart';
+
 import 'package:flutter_project_app/provider/employee_data_provider.dart';
 import 'package:flutter_project_app/screens/employee_view.screen.dart';
 
@@ -9,7 +11,7 @@ import 'package:provider/provider.dart';
 class AddEmployeeScreen extends StatefulWidget {
   static const routName = 'add-employee';
   final String name;
-  final List department;
+  final String department;
   final String contactNo;
   AddEmployeeScreen({Key key, this.name, this.department, this.contactNo})
       : super(key: key);
@@ -25,9 +27,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   String department;
   String contactNo;
 
-  TextEditingController _dateEditingController = TextEditingController();
-  TextEditingController _nameEditingController = TextEditingController();
-  TextEditingController _contactEditingController = TextEditingController();
+  TextEditingController _dateEditingController;
+  TextEditingController _nameEditingController;
+  TextEditingController _contactEditingController;
 
   String _selectedDept;
   List<String> _department = [
@@ -48,6 +50,57 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   String startDate;
 
   DateTime selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    if (widget.name != null &&
+        widget.department != null &&
+        widget.contactNo != null) {
+      _dateEditingController = TextEditingController();
+      _selectedDept = widget.department;
+      _nameEditingController = TextEditingController(text: widget.name);
+      _contactEditingController = TextEditingController(text: widget.contactNo);
+    } else {
+      _nameEditingController = TextEditingController();
+      _dateEditingController = TextEditingController();
+      _contactEditingController = TextEditingController();
+    }
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _dateEditingController.dispose();
+    _nameEditingController.dispose();
+    _contactEditingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Add Employee'),
+      ),
+      body: SingleChildScrollView(
+        child: Container(
+          margin: EdgeInsets.all(16),
+          // padding: EdgeInsets.all(12),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                textField(),
+                buildDateField(),
+                buildDropDownButton(),
+                submitButton(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final now = DateTime.now();
@@ -135,88 +188,64 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    _dateEditingController.dispose();
-    _nameEditingController.dispose();
-    _contactEditingController.dispose();
-    super.dispose();
+  Widget submitButton() {
+    return ElevatedButton(
+      onPressed: () async {
+        if (_formKey.currentState.validate()) {
+          Employee employee;
+
+          employee = Employee(
+            name: _nameEditingController.text,
+            department: _selectedDept,
+            contactNo: _contactEditingController.text,
+            // designation:
+          );
+          Provider.of<EmployeeDataProvider>(context, listen: false)
+              .addEmployee(employee);
+
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => EmployeeView(
+                  department: employee.department,
+                  name: employee.name,
+                  contact: employee.contactNo),
+            ),
+          );
+        }
+      },
+      child: Text('Submit Application'),
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Add Employee'),
-      ),
-      body: SingleChildScrollView(
-        child: Container(
-          margin: EdgeInsets.all(16),
-          // padding: EdgeInsets.all(12),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: _nameEditingController,
-                  validator: (value) {
-                    if (value.isEmpty || value.length > 30) {
-                      return 'Please enter a correct username';
-                    } else {
-                      return null;
-                    }
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Employee Name',
-                  ),
-                ),
-                TextFormField(
-                  validator: (value) {
-                    if (value.isEmpty || value.length < 10) {
-                      return 'Please enter a valid phone number';
-                    } else {
-                      return null;
-                    }
-                  },
-                  controller: _contactEditingController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 10,
-                  decoration: InputDecoration(labelText: 'Contact no'),
-                ),
-                buildDateField(),
-                buildDropDownButton(),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState.validate()) {
-                      Employee employee;
-
-                      employee = Employee(
-                        name: _nameEditingController.text,
-                        department: _selectedDept,
-                        contactNo: _contactEditingController.text,
-                        // designation:
-                      );
-                      Provider.of<EmployeeDataProvider>(context, listen: false)
-                          .addEmployee(employee);
-
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => EmployeeView(
-                              // name: name,
-                              // department: department,
-                              // contactNumber: contactNo,
-                              ),
-                        ),
-                      );
-                    }
-                  },
-                  child: Text('Submit Application'),
-                )
-              ],
-            ),
-          ),
+  Widget textField() {
+    return Column(children: [
+      TextFormField(
+        controller: _nameEditingController,
+        validator: (value) {
+          if (value.isEmpty || value.length > 30) {
+            return 'Please enter a correct username';
+          } else {
+            return null;
+          }
+        },
+        decoration: InputDecoration(
+          hintText: 'Employee Name',
         ),
       ),
-    );
+      TextFormField(
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        validator: (value) {
+          if (value.isEmpty || value.length < 10) {
+            return 'Please enter a valid phone number';
+          } else {
+            return null;
+          }
+        },
+        controller: _contactEditingController,
+        keyboardType: TextInputType.number,
+        maxLength: 10,
+        decoration: InputDecoration(labelText: 'Contact no'),
+      )
+    ]);
   }
 }
